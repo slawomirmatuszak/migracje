@@ -1,8 +1,15 @@
 library(tidyverse)
 library(lubridate)
 
+# chyba alternatywa dla bulka
+# https://ec.europa.eu/eurostat/databrowser/bulk?lang=en
+
 # pobór danych
+# pobór z bulka
 linki <- "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=data%2Fmigr_asytpsm.tsv.gz"
+
+# pobór z alternatywnego źródła (trzeba przerobić kod)
+# linki <- "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/MIGR_ASYTPSM/?format=TSV&compressed=true"
 dest <- "./dane/migracje.gz"
 
 download.file(linki, dest, mode="wb")
@@ -35,13 +42,25 @@ wiek_plec_pl <- dane |>
 
 pop_range <- range(wiek_plec_pl$liczba)
 #pop_range_seq <- seq(pop_range[1], pop_range[2], 5e4)
-pop_range_breaks <- pretty(pop_range, n = 7)
+pop_range_breaks <- pretty(pop_range, n = 5)
 
 
 ggplot(wiek_plec_pl, aes(wiek, liczba, fill = plec))+
   geom_col() +
   scale_y_continuous(breaks  = pop_range_breaks,
                      labels = abs(pop_range_breaks)/1000) +
+  coord_flip()+
+  facet_wrap(~kraj)+
+  theme_bw()
+
+# proporcje mężczyzn i kobiet
+wiek_plec_pl |> 
+  mutate(liczba = if_else(plec == "M", liczba*-1, liczba)) |> 
+  group_by(kraj, wiek) |> 
+  mutate(prop = round(liczba/sum(liczba),3)) |> 
+ggplot(aes(wiek, prop, fill = plec))+
+  geom_col(position = "fill")+
+  geom_text(aes(label = scales::percent(prop)), position = position_stack(.5))+
   coord_flip()+
   facet_wrap(~kraj)+
   theme_bw()
