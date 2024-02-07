@@ -6,7 +6,7 @@ dane <- dane |>
   filter(obywatelstwo == "UA")
 
 wiek_plec_pl <- dane |> 
-  filter(kraj %in% c("PL", "DE", "CZ"), 
+  filter(kraj %in% c("PL", "DE", "CZ", "ES", "RO", "BG"), 
          data == max(data), 
          plec %in% c("M", "F"), 
          wiek %in% c("Y_LT14", "Y14-17", "Y18-34", "Y35-64", "Y_GE65")) |> 
@@ -37,3 +37,14 @@ wiek_plec_pl |>
   coord_flip()+
   facet_wrap(~kraj)+
   theme_bw()
+
+
+# liczba uchylantów w Polsce --------------------------------------
+
+uchylanci <- wiek_plec_pl |> 
+  filter(plec == "M", 
+         wiek %in% c("Y18-34", "Y35-64")) |> 
+  mutate(liczba = liczba*-1) |> 
+  group_by(kraj) |> 
+  summarise(liczba = sum(liczba))
+
