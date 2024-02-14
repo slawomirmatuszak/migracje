@@ -3,9 +3,6 @@ library(eurostat)
 library(scales)
 library(giscoR)
 
-#test <- get_eurostat("MIGR_ASYTPSM")
-
-
 # funkcje -----------------------------------------------------------------
 
 fun.zmiana.wieku <- function(x){
@@ -19,7 +16,14 @@ fun.zmiana.wieku <- function(x){
   
 }
 
-# "Y_LT14", "Y14-17", "Y18-34", "Y35-64", "Y_GE65"
+
+fun.interwaly <- function(x) {
+  breaks <- c(0, 10000, 50000, 100000, 200000, 500000, 1000000, Inf)
+  labels <- c("<10 tys.", "10-50 tys.", "50-100 tys.", "100-200 tys.", "200-500 tys.", "500 tys.-1 mln","> 1 mln")
+  
+  intervals <- cut(x, breaks = breaks, labels = labels, right = FALSE)
+  return(intervals)
+}
 
 # pobór i wstępna obróbka -------------------------------------------------
 
@@ -44,8 +48,6 @@ dane <- dane_raw |>
   group_by(geo) |> 
   filter(!is.na(values)) |> 
   filter(time == max(time))
-
-
 
 
 # ogólna liczba w UE ------------------------------------------------------
@@ -119,8 +121,6 @@ wiek_plec_pl <- dane |>
   mutate(age = fun.zmiana.wieku(age), 
          sex = gsub("F", "K", sex))
 
-
-
 ggplot(wiek_plec_pl, aes(age, values, fill = sex))+
   geom_col() +
   scale_y_continuous(labels =  ~ number_format(scale = .001)(abs(.x)))+
@@ -141,13 +141,9 @@ wiek_plec_pl |>
   filter(geo %in% c("PL", "DE")) |> 
   ggplot(aes(age, values, fill = sex))+
   geom_col() +
-  #scale_y_continuous(labels = label_number(scale = 1e-3, suffix = " tys."))+
   scale_y_continuous(labels =  ~ number_format(scale = .001, suffix = " tys.")(abs(.x)))+
-  #scale_y_continuous(breaks  = pop_range_breaks,
-  #                   labels = abs(pop_range_breaks)/1000)+
   scale_fill_brewer(palette = "Set1")+
   coord_flip()+
-  #facet_wrap(~geo, scales = "free_x")+
   facet_wrap(~nazwa, ncol = 1)+
   theme_bw()
 
@@ -247,7 +243,6 @@ zmiana |>
   filter(geo != "EU27_2020") |> 
 ggplot(aes(reorder(geo, zmiana), zmiana))+
   geom_col(fill = "steelblue")+
-  #scale_y_continuous(labels = label_percent())+
   coord_flip()+
   theme_minimal()
 
@@ -295,17 +290,13 @@ zmiana_wiek_calosc |>
   ggplot(aes(age, values, fill = sex))+
   geom_col() +
   scale_y_continuous(labels =  ~ number_format(scale = 100, suffix = "%")(abs(.x)))+
-  #scale_y_continuous(breaks  = pop_range_breaks,
-  #                   labels = abs(pop_range_breaks)/1000)+
   scale_fill_brewer(palette = "Set1")+
   coord_flip()+
   labs(y = "zmiana r/r", 
        x = "grupa wiekowa", 
        fill = "płeć")+
-  #facet_wrap(~geo, scales = "free_x")+
-  #facet_wrap(~geo, ncol = 1)+
   theme_minimal()+
-  theme(legend.position = "top") #-> p1
+  theme(legend.position = "top")
 
 ggsave(file = "./wykresy/zmiana_plec_rr.jpg", units = "in", width = 6, height = 3.5)
 
@@ -314,21 +305,16 @@ zmiana_wiek_calosc |>
   ggplot(aes(age, zmiana, fill = sex))+
   geom_col() +
   scale_y_continuous(labels =  ~ number_format(scale = 1)(abs(.x)))+
-  #scale_y_continuous(breaks  = pop_range_breaks,
-  #                   labels = abs(pop_range_breaks)/1000)+
   scale_fill_brewer(palette = "Set1")+
   coord_flip()+
   labs(y = "liczba uchodźców", 
        x = "grupa wiekowa", 
        fill = "płeć")+
-  #facet_wrap(~geo, scales = "free_x")+
-  #facet_wrap(~geo, ncol = 1)+
   theme_minimal()+
-  theme(legend.position = "top") #-> p2
+  theme(legend.position = "top")
 
 ggsave(file = "./wykresy/zmiana_plec_rr_liczba.jpg", units = "in", width = 6, height = 3.5)
 
-#gridExtra::grid.arrange(p2, p1, ncol = 1)
 
 # dynamika wybrane kraje --------------------------------------------------
 
@@ -350,7 +336,7 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(ggtext)
 
-#mapa_world_raw <- ne_download(scale = 110, type = "countries")
+# przygotowanie map
 
 world <- ne_countries(scale = 'medium',
                       returnclass = 'sf')
@@ -380,35 +366,27 @@ temat <- list(theme(legend.position = c(0.8, 0.8),
                     axis.ticks = element_blank()) )
 
 
-# zmiana między 2022 i 203 r. 
+
+# # zmiana między 2022 i 2023 r.  -----------------------------------------
 
 zmiana_mapa <- mapa |> 
   left_join(zmiana, by = c("CNTR_CODE" = "geo")) |> 
-  #mutate(procent = paste0(round(zmiana, 3)*100, "%"))
-  mutate(procent = percent(odsetek, accuracy = 0.1)) #|> 
-  #st_crop(st_bbox(c(xmin=2400000, ymin=1320000, xmax=7800000, ymax=5650000)))
+  mutate(procent = percent(odsetek, accuracy = 0.1))
 
 
 ggplot(zmiana_mapa) +
-  # Base layer
   geom_sf(aes(fill = odsetek), color = "grey40")+
   scale_fill_gradient2(low = "red3", mid = "white", high = "darkgreen", midpoint = 0, labels = label_percent())+
-  #geom_sf_text_repel(aes(label = procent))+
-  #geom_sf_label(data = subset(zmiana_mapa, geo != "LI" & geo != "LU"), aes(label = procent), size = 2)+
   geom_richtext(
     data = subset(zmiana_mapa, geo != "LI" & geo != "LU"),
     aes(label = procent, geometry = geometry), 
     stat = "sf_coordinates",
-    #size = 14 / .pt,
     size =3,
     colour = "black",
-    #label.colour = "black",
     label.padding = unit(c(0.05, 0.05, 0.05, 0.05), "lines"),
     fill = "white",
-    #fill = NA,
     alpha = 0.7,
-    label.color = NA,
-    #label.r = unit(0, "lines")
+    label.color = NA
   )+
   labs(x = NULL, 
        y = NULL, 
@@ -420,53 +398,37 @@ ggplot(zmiana_mapa) +
     crs = 3035
   )+ 
   temat
-  #theme(legend.position = c(0.8, 0.8),
-  #      plot.margin = margin(0, 0, 0, 0))
 
-ggsave(file = "./wykresy/mapa_zmiana_po_roku3.png", units = "in", width = 6.45, height = 5.48)
+# można zmienić temat na void, wtedy jest idealnie dla worda
+ggsave(file = "./wykresy/mapa_zmiana_po_roku.png", units = "in", width = 6.45, height = 5.48, bg="white")
 
-# liczba uchodźców wg państw
 
-fun.interwaly <- function(x) {
-  breaks <- c(0, 10000, 50000, 100000, 200000, 500000, 1000000, Inf)
-  labels <- c("<10 tys.", "10-50 tys.", "50-100 tys.", "100-200 tys.", "200-500 tys.", "500 tys.-1 mln","> 1 mln")
-  
-  intervals <- cut(x, breaks = breaks, labels = labels, right = FALSE)
-  return(intervals)
-}
-
+# # liczba uchodźców wg państw --------------------------------------------
 
 uchodzcy_all <- dane |> 
   filter(geo != "EU27_2020", 
          sex %in% c("T"), 
          age %in% c("TOTAL")) |> 
   mutate(etykieta = if_else(values > 1e6, paste(round(values/1e6, 2), "mln"), paste(round(values/1e3, 0), "tys.")))  |> 
-  mutate(przedzial = fun.interwaly(values)) #|> 
-  #mutate(przedzial = factor(przedzial, levels = "<10 tys.", "10-50 tys.", "50-100 tys.", "100-200 tys.", "200-500 tys.", "500 tys.-1 mln","> 1 mln"))
+  mutate(przedzial = fun.interwaly(values))
 
 mapa_uchodzcy <- mapa |> 
-  left_join(uchodzcy_all, by = c("CNTR_CODE" = "geo")) #|> 
-  #mutate(procent = percent(odsetek, accuracy = 0.1))
+  left_join(uchodzcy_all, by = c("CNTR_CODE" = "geo"))
 
 ggplot(mapa_uchodzcy) +
   geom_sf(data = subset(mapa_uchodzcy, is.na(przedzial)), color = "grey40", fill = "grey50")+
   geom_sf(data = subset(mapa_uchodzcy, !is.na(przedzial)), aes(fill = przedzial), color = "grey40")+
   scale_fill_brewer(palette = "Greens", "", na.translate = FALSE) +
-
   geom_richtext(
     data = subset(mapa_uchodzcy, geo != "LI" & geo != "LU"),
     aes(label = etykieta, geometry = geometry), 
     stat = "sf_coordinates",
-    #size = 14 / .pt,
     size =3,
     colour = "black",
-    #label.colour = "black",
     label.padding = unit(c(0.05, 0.05, 0.05, 0.05), "lines"),
     fill = "white",
-    #fill = NA,
     alpha = 0.7,
-    label.color = NA,
-    #label.r = unit(0, "lines")
+    label.color = NA
   )+
   labs(x = NULL, 
        y = NULL, 
@@ -478,18 +440,12 @@ ggplot(mapa_uchodzcy) +
     crs = 3035
   )+
   temat
-  #theme(legend.position = c(0.8, 0.8),
-  #      plot.margin = margin(0, 0, 0, 0),
-  #      panel.border = element_blank(),
-  #      panel.spacing = unit(c(0, 0, 0, 0), "null"),
-  #      panel.background = element_rect(fill = "aliceblue", color = NA),
-  #      axis.text.x = element_blank(),
-  #      axis.text.y = element_blank(),
-  #      axis.ticks = element_blank()) #,rect = element_blank()
 
-ggsave(file = "./wykresy/mapa_uchodźcy_grudzien_2023.png", units = "in", width = 6.45, height = 5.5)
 
-# liczba uchodźców wg liczby ludności
+ggsave(file = "./wykresy/mapa_uchodźcy_grudzien_2023.png", units = "in", width = 6.45, height = 5.48, bg="white")
+
+
+# liczba uchodźców wg liczby ludności -------------------------------------
 
 ludnosc_raw <- get_eurostat("tps00001")
 
@@ -511,21 +467,16 @@ ggplot(mapa_ludnosc) +
   geom_sf(data = subset(mapa_ludnosc, is.na(per_100)), color = "grey40", fill = "grey50")+
   geom_sf(data = subset(mapa_ludnosc, !is.na(per_100)), aes(fill = per_100), color = "grey40")+
   scale_fill_distiller(palette = "Greens", direction = 1) +
-  
   geom_richtext(
     data = subset(mapa_ludnosc, geo != "LI" & geo != "LU"),
     aes(label = etykieta, geometry = geometry), 
     stat = "sf_coordinates",
-    #size = 14 / .pt,
     size =3,
     colour = "black",
-    #label.colour = "black",
     label.padding = unit(c(0.05, 0.05, 0.05, 0.05), "lines"),
     fill = "white",
-    #fill = NA,
     alpha = 0.7,
-    label.color = NA,
-    #label.r = unit(0, "lines")
+    label.color = NA
   )+
   labs(x = NULL, 
        y = NULL, 
@@ -537,36 +488,30 @@ ggplot(mapa_ludnosc) +
     crs = 3035
   )+
   temat
-  #theme(legend.position = c(0.8, 0.8),
-  #      plot.margin = margin(0, 0, 0, 0))
 
-ggsave(file = "./wykresy/mapa_uchodźcy_grudzien_100K.png", units = "in", width = 6.45, height = 5.5)
+ggsave(file = "./wykresy/mapa_uchodźcy_grudzien_100K.png", units = "in", width = 6.45, height = 5.48, bg="white")
 
-# mapa uchylanci
+
+# mapa uchylanci ----------------------------------------------------------
 
 mapa_uchylanci <- mapa |> 
   left_join(odsetek_mlodych, by = c("CNTR_CODE" = "geo")) |> 
   mutate(procent = percent(odsetek, accuracy = 0.1))
 
 ggplot(mapa_uchylanci) +
-  # Base layer
   geom_sf(aes(fill = odsetek), color = "grey40")+
   scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = label_percent())+
-  #geom_sf_text(data = subset(mapa_uchylanci, geo != "LI" & geo != "LU"), aes(label = procent), size = 3)+
   geom_richtext(
     data = subset(mapa_uchylanci, geo != "LI" & geo != "LU"),
     aes(label = procent, geometry = geometry), 
     stat = "sf_coordinates",
-    #size = 14 / .pt,
     size =3,
     colour = "black",
-    #label.colour = "black",
     label.padding = unit(c(0.05, 0.05, 0.05, 0.05), "lines"),
     fill = "white",
     #fill = NA,
     alpha = 0.7,
-    label.color = NA,
-    #label.r = unit(0, "lines")
+    label.color = NA
   )+
   labs(x = NULL, 
        y = NULL, 
@@ -578,38 +523,30 @@ ggplot(mapa_uchylanci) +
     crs = 3035
   )+
   temat
-  #theme(legend.position = c(0.8, 0.8),
-  #      plot.margin = margin(0, 0, 0, 0))
 
-ggsave(file = "./wykresy/mapa_uchylanci.png", units = "in", width = 6.45, height = 5.5)
+ggsave(file = "./wykresy/mapa_uchylanci.png", units = "in", width = 6.45, height = 5.48, bg="white")
 
 
-# uchylanci r/r
+# uchylanci r/r -----------------------------------------------------------
 
 mapa_uchylanci2 <- mapa |> 
   left_join(uchylanci_2022, by = c("CNTR_CODE" = "geo")) |> 
   mutate(procent = percent(odsetek, accuracy = 0.1))
 
 ggplot(mapa_uchylanci2) +
-  # Base layer
   geom_sf(aes(fill = odsetek), color = "grey40")+
-  #scale_fill_distiller(palette = "YlOrRd", direction = 1, labels = label_percent())+ #palette = "Spectral", direction = -1
   scale_fill_distiller(palette = "Spectral", direction = -1, labels = label_percent())+
-  #geom_sf_text(data = subset(mapa_uchylanci, geo != "LI" & geo != "LU"), aes(label = procent), size = 3)+
   geom_richtext(
     data = subset(mapa_uchylanci2, geo != "LI" & geo != "LU"),
     aes(label = procent, geometry = geometry), 
     stat = "sf_coordinates",
-    #size = 14 / .pt,
     size =3,
     colour = "black",
-    #label.colour = "black",
     label.padding = unit(c(0.05, 0.05, 0.05, 0.05), "lines"),
     fill = "white",
     #fill = NA,
     alpha = 0.7,
-    label.color = NA,
-    #label.r = unit(0, "lines")
+    label.color = NA
   )+
   labs(x = NULL, 
        y = NULL, 
@@ -621,12 +558,11 @@ ggplot(mapa_uchylanci2) +
     crs = 3035
   )+
   temat
-  #theme(legend.position = c(0.8, 0.8),
-  #      plot.margin = margin(0, 0, 0, 0))
 
-ggsave(file = "./wykresy/mapa_uchylanci_zmiana.png", units = "in", width = 6.45, height = 5.5)
+ggsave(file = "./wykresy/mapa_uchylanci_zmiana.png", units = "in", width = 6.45, height = 5.48, bg="white")
 
-# odsetek dzieci mapa
+
+# odsetek dzieci mapa -----------------------------------------------------
 
 odsetek_dzieci_mapa <- mapa |> 
   left_join(subset(odsetek_dzieci, geo != "FR"), by = c("CNTR_CODE" = "geo")) |> 
@@ -640,16 +576,12 @@ ggplot(odsetek_dzieci_mapa) +
     data = subset(odsetek_dzieci_mapa, geo != "LI" & geo != "LU"),
     aes(label = procent, geometry = geometry), 
     stat = "sf_coordinates",
-    #size = 14 / .pt,
     size =3,
     colour = "black",
-    #label.colour = "black",
     label.padding = unit(c(0.05, 0.05, 0.05, 0.05), "lines"),
     fill = "white",
-    #fill = NA,
     alpha = 0.7,
-    label.color = NA,
-    #label.r = unit(0, "lines")
+    label.color = NA
   )+
   labs(x = NULL, 
        y = NULL, 
@@ -661,7 +593,5 @@ ggplot(odsetek_dzieci_mapa) +
     crs = 3035
   )+
   temat
-  #theme(legend.position = c(0.8, 0.8),
-  #      plot.margin = margin(0, 0, 0, 0))
 
-ggsave(file = "./wykresy/mapa_odsetek_niepelnoletnich.png", units = "in", width = 6.45, height = 5.5)
+ggsave(file = "./wykresy/mapa_odsetek_niepelnoletnich.png", units = "in", width = 6.45, height = 5.48, bg="white")
