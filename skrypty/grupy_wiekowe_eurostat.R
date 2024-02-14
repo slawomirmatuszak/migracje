@@ -356,7 +356,16 @@ mapa <- get_eurostat_geospatial(
 
 # temat dla map
 
-temat <- list(theme(legend.position = c(0.8, 0.8),
+temat <- list(labs(x = NULL, 
+                   y = NULL, 
+                   fill = NULL),
+                theme_minimal(),
+                coord_sf(
+                  xlim = c(2377294, 7453440),
+                  ylim = c(1313597, 5628510),
+                  crs = 3035
+                ),
+              theme(legend.position = c(0.8, 0.8),
                     plot.margin = margin(0, 0, 0, 0),
                     panel.border = element_blank(),
                     panel.spacing = unit(c(0, 0, 0, 0), "null"),
@@ -388,15 +397,6 @@ ggplot(zmiana_mapa) +
     alpha = 0.7,
     label.color = NA
   )+
-  labs(x = NULL, 
-       y = NULL, 
-       fill = NULL)+
-  theme_minimal()+
-  coord_sf(
-    xlim = c(2377294, 7453440),
-    ylim = c(1313597, 5628510),
-    crs = 3035
-  )+ 
   temat
 
 # można zmienić temat na void, wtedy jest idealnie dla worda
@@ -467,6 +467,8 @@ ggplot(mapa_ludnosc) +
   geom_sf(data = subset(mapa_ludnosc, is.na(per_100)), color = "grey40", fill = "grey50")+
   geom_sf(data = subset(mapa_ludnosc, !is.na(per_100)), aes(fill = per_100), color = "grey40")+
   scale_fill_distiller(palette = "Greens", direction = 1) +
+  #scale_fill_steps(breaks = c(0, 200, 500, 700, 1000, 1500, 2000, 2500, 3000, 3500)) +
+  #scale_fill_steps(n.breaks = 9)+
   geom_richtext(
     data = subset(mapa_ludnosc, geo != "LI" & geo != "LU"),
     aes(label = etykieta, geometry = geometry), 
@@ -477,15 +479,6 @@ ggplot(mapa_ludnosc) +
     fill = "white",
     alpha = 0.7,
     label.color = NA
-  )+
-  labs(x = NULL, 
-       y = NULL, 
-       fill = NULL)+
-  theme_minimal()+
-  coord_sf(
-    xlim = c(2377294, 7453440),
-    ylim = c(1313597, 5628510),
-    crs = 3035
   )+
   temat
 
@@ -513,15 +506,6 @@ ggplot(mapa_uchylanci) +
     alpha = 0.7,
     label.color = NA
   )+
-  labs(x = NULL, 
-       y = NULL, 
-       fill = NULL)+
-  theme_minimal()+
-  coord_sf(
-    xlim = c(2377294, 7453440),
-    ylim = c(1313597, 5628510),
-    crs = 3035
-  )+
   temat
 
 ggsave(file = "./wykresy/mapa_uchylanci.png", units = "in", width = 6.45, height = 5.48, bg="white")
@@ -548,15 +532,6 @@ ggplot(mapa_uchylanci2) +
     alpha = 0.7,
     label.color = NA
   )+
-  labs(x = NULL, 
-       y = NULL, 
-       fill = NULL)+
-  theme_minimal()+
-  coord_sf(
-    xlim = c(2377294, 7453440),
-    ylim = c(1313597, 5628510),
-    crs = 3035
-  )+
   temat
 
 ggsave(file = "./wykresy/mapa_uchylanci_zmiana.png", units = "in", width = 6.45, height = 5.48, bg="white")
@@ -582,15 +557,6 @@ ggplot(odsetek_dzieci_mapa) +
     fill = "white",
     alpha = 0.7,
     label.color = NA
-  )+
-  labs(x = NULL, 
-       y = NULL, 
-       fill = NULL)+
-  theme_minimal()+
-  coord_sf(
-    xlim = c(2377294, 7453440),
-    ylim = c(1313597, 5628510),
-    crs = 3035
   )+
   temat
 
