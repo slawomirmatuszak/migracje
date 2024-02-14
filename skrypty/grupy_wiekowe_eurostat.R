@@ -368,6 +368,17 @@ mapa <- get_eurostat_geospatial(
 ) |> 
   bind_rows(mapa_europa)
 
+# temat dla map
+
+temat <- list(theme(legend.position = c(0.8, 0.8),
+                    plot.margin = margin(0, 0, 0, 0),
+                    panel.border = element_blank(),
+                    panel.spacing = unit(c(0, 0, 0, 0), "null"),
+                    panel.background = element_rect(fill = "aliceblue", color = NA),
+                    axis.text.x = element_blank(),
+                    axis.text.y = element_blank(),
+                    axis.ticks = element_blank()) )
+
 
 # zmiana między 2022 i 203 r. 
 
@@ -407,11 +418,12 @@ ggplot(zmiana_mapa) +
     xlim = c(2377294, 7453440),
     ylim = c(1313597, 5628510),
     crs = 3035
-  )+
-  theme(legend.position = c(0.8, 0.8),
-        plot.margin = margin(0, 0, 0, 0))
+  )+ 
+  temat
+  #theme(legend.position = c(0.8, 0.8),
+  #      plot.margin = margin(0, 0, 0, 0))
 
-ggsave(file = "./wykresy/mapa_zmiana_po_roku.jpg", units = "in", width = 7, height = 5.5)
+ggsave(file = "./wykresy/mapa_zmiana_po_roku3.png", units = "in", width = 6.45, height = 5.48)
 
 # liczba uchodźców wg państw
 
@@ -465,10 +477,17 @@ ggplot(mapa_uchodzcy) +
     ylim = c(1313597, 5628510),
     crs = 3035
   )+
-  theme(legend.position = c(0.8, 0.8),
-        plot.margin = margin(0, 0, 0, 0))
+  temat
+  #theme(legend.position = c(0.8, 0.8),
+  #      plot.margin = margin(0, 0, 0, 0),
+  #      panel.border = element_blank(),
+  #      panel.spacing = unit(c(0, 0, 0, 0), "null"),
+  #      panel.background = element_rect(fill = "aliceblue", color = NA),
+  #      axis.text.x = element_blank(),
+  #      axis.text.y = element_blank(),
+  #      axis.ticks = element_blank()) #,rect = element_blank()
 
-ggsave(file = "./wykresy/mapa_uchodźcy_grudzien_2023.jpg", units = "in", width = 7, height = 5.5)
+ggsave(file = "./wykresy/mapa_uchodźcy_grudzien_2023.png", units = "in", width = 6.45, height = 5.5)
 
 # liczba uchodźców wg liczby ludności
 
@@ -517,10 +536,11 @@ ggplot(mapa_ludnosc) +
     ylim = c(1313597, 5628510),
     crs = 3035
   )+
-  theme(legend.position = c(0.8, 0.8),
-        plot.margin = margin(0, 0, 0, 0))
+  temat
+  #theme(legend.position = c(0.8, 0.8),
+  #      plot.margin = margin(0, 0, 0, 0))
 
-ggsave(file = "./wykresy/mapa_uchodźcy_grudzien_100K.jpg", units = "in", width = 7, height = 5.5)
+ggsave(file = "./wykresy/mapa_uchodźcy_grudzien_100K.png", units = "in", width = 6.45, height = 5.5)
 
 # mapa uchylanci
 
@@ -557,10 +577,11 @@ ggplot(mapa_uchylanci) +
     ylim = c(1313597, 5628510),
     crs = 3035
   )+
-  theme(legend.position = c(0.8, 0.8),
-        plot.margin = margin(0, 0, 0, 0))
+  temat
+  #theme(legend.position = c(0.8, 0.8),
+  #      plot.margin = margin(0, 0, 0, 0))
 
-ggsave(file = "./wykresy/mapa_uchylanci.jpg", units = "in", width = 7, height = 5.5)
+ggsave(file = "./wykresy/mapa_uchylanci.png", units = "in", width = 6.45, height = 5.5)
 
 
 # uchylanci r/r
@@ -599,10 +620,11 @@ ggplot(mapa_uchylanci2) +
     ylim = c(1313597, 5628510),
     crs = 3035
   )+
-  theme(legend.position = c(0.8, 0.8),
-        plot.margin = margin(0, 0, 0, 0))
+  temat
+  #theme(legend.position = c(0.8, 0.8),
+  #      plot.margin = margin(0, 0, 0, 0))
 
-ggsave(file = "./wykresy/mapa_uchylanci_zmiana.jpg", units = "in", width = 7, height = 5.5)
+ggsave(file = "./wykresy/mapa_uchylanci_zmiana.png", units = "in", width = 6.45, height = 5.5)
 
 # odsetek dzieci mapa
 
@@ -638,7 +660,8 @@ ggplot(odsetek_dzieci_mapa) +
     ylim = c(1313597, 5628510),
     crs = 3035
   )+
-  theme(legend.position = c(0.8, 0.8),
-        plot.margin = margin(0, 0, 0, 0))
+  temat
+  #theme(legend.position = c(0.8, 0.8),
+  #      plot.margin = margin(0, 0, 0, 0))
 
-ggsave(file = "./wykresy/mapa_odsetek_niepelnoletnich.jpg", units = "in", width = 7, height = 5.5)
+ggsave(file = "./wykresy/mapa_odsetek_niepelnoletnich.png", units = "in", width = 6.45, height = 5.5)
